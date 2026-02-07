@@ -125,12 +125,21 @@ function getColumnIndexes($, table) {
         return index === -1 ? fallback : index;
     };
 
+    const total = findIndex(['total', 'tot'], headers.length - 1);
+    const bronze = findIndex(['bronze', 'b'], total - 1);
+    const silver = findIndex(['silver', 's'], bronze - 1);
+
+    // ESPN occasionally leaves the gold header blank, so infer it from the
+    // silver column when no reliable header match is found.
+    const explicitGoldIndex = headers.findIndex((header) => header.includes('gold'));
+    const gold = explicitGoldIndex === -1 ? silver - 1 : explicitGoldIndex;
+
     return {
-        country: findIndex(['country', 'team', 'noc'], 0),
-        gold: findIndex(['gold', 'g'], 1),
-        silver: findIndex(['silver', 's'], 2),
-        bronze: findIndex(['bronze', 'b'], 3),
-        total: findIndex(['total', 'tot'], 4)
+        country: findIndex(['country', 'team', 'noc'], Math.max(0, gold - 1)),
+        gold,
+        silver,
+        bronze,
+        total
     };
 }
 
