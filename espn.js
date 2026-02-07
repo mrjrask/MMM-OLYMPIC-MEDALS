@@ -32,37 +32,118 @@ async function getMedalData(type, year, limit) {
         body = await fetchPage(alternateUrl);
     }
 
+    return parseMedalData(body, limit);
+}
+
+function parseMedalData(body, limit) {
     const $ = cheerio.load(body);
-    var medalContainer = $('.medal-container');
-    var medalTable = medalContainer.next();
-    if (medalTable[0].name !== 'table') {
+    const medalTable = findMedalTable($);
+
+    if (!medalTable.length) {
         return {
             header: 'No Medals Data',
             rows: 'No Medals data available yet'
-        }
+        };
     }
-    var header = medalTable.find('caption').first().text();
-    var rows = medalTable.find('tbody');
+
+    const header = medalTable.find('caption').first().text().trim() || 'Olympic Medals';
+    const columns = getColumnIndexes($, medalTable);
     let countries = [];
-    rows.find('tr').each((index, row) => {
-        if(index >= limit){
+
+    medalTable.find('tbody tr').each((index, row) => {
+        if (index >= limit) {
             return false;
         }
-        let data = {
-            abbreviation: $(row).find('.country_name--abbrev').first().text(),
-            country: $(row).find('.country_name--long').first().text(),
-            img: $(row).find('.team-logo').attr('src'),
-            gold: $(row).find('td').eq(1).text(),
-            silver: $(row).find('td').eq(2).text(),
-            bronze: $(row).find('td').eq(3).text(),
-            total: $(row).find('td').eq(4).text(),
+
+        const cells = $(row).find('th, td');
+        const countryCell = getCell(cells, columns.country);
+        const abbreviation =
+            $(row).find('.country_name--abbrev').first().text().trim() ||
+            countryCell.find('.short-name, .abbr').first().text().trim() ||
+            countryCell.text().trim().slice(0, 3).toUpperCase();
+        const country =
+            $(row).find('.country_name--long').first().text().trim() ||
+            countryCell.find('.hide-mobile, .long-name').first().text().trim() ||
+            countryCell.text().trim();
+
+        if (!country) {
+            return;
         }
-        countries.push(data);
+
+        countries.push({
+            abbreviation,
+            country,
+            img: $(row).find('.team-logo, img').first().attr('src'),
+            gold: getCellText(cells, columns.gold),
+            silver: getCellText(cells, columns.silver),
+            bronze: getCellText(cells, columns.bronze),
+            total: getCellText(cells, columns.total),
+        });
     });
-    return {
-        header: header,
-        rows: countries
+
+    if (!countries.length) {
+        return {
+            header: 'No Medals Data',
+            rows: 'No Medals data available yet'
+        };
     }
+
+    return {
+        header,
+        rows: countries
+    };
 }
 
-module.exports = { getMedalData };
+function findMedalTable($) {
+    const legacyTable = $('.medal-container').next('table');
+    if (legacyTable.length) {
+        return legacyTable;
+    }
+
+    return $('table').filter((index, table) => {
+        const headingText = $(table)
+            .find('thead th')
+            .map((i, th) => $(th).text().trim().toLowerCase())
+            .get();
+
+        return (
+            headingText.some((text) => text.includes('gold')) &&
+            headingText.some((text) => text.includes('silver')) &&
+            headingText.some((text) => text.includes('bronze')) &&
+            headingText.some((text) => text.includes('total'))
+        );
+    }).first();
+}
+
+function getColumnIndexes($, table) {
+    const headers = table.find('thead th').map((index, th) => {
+        return $(th).text().trim().toLowerCase();
+    }).get();
+
+    const findIndex = (terms, fallback) => {
+        const index = headers.findIndex((header) => terms.some((term) => header.includes(term)));
+        return index === -1 ? fallback : index;
+    };
+
+    return {
+        country: findIndex(['country', 'team', 'noc'], 0),
+        gold: findIndex(['gold', 'g'], 1),
+        silver: findIndex(['silver', 's'], 2),
+        bronze: findIndex(['bronze', 'b'], 3),
+        total: findIndex(['total', 'tot'], 4)
+    };
+}
+
+function getCell(cells, index) {
+    if (index >= 0 && index < cells.length) {
+        return cells.eq(index);
+    }
+
+    return cells.first();
+}
+
+function getCellText(cells, index) {
+    return getCell(cells, index).text().trim();
+}
+
+module.exports = { getMedalData, parseMedalData };
