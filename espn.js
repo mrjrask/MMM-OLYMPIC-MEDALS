@@ -2,19 +2,36 @@ const cheerio = require('cheerio');
 const LOG = require('logger');
 
 function getURL(type, year) {
+    if (type === 'winter') {
+        return 'https://www.espn.com/olympics/winter/2026/medals';
+    }
     return `https://www.espn.com/olympics/${type}/${year}/medals`;
+}
+
+function getAlternateURL(type, year) {
+    return `https://www.espn.com/olympics/${type}/${year}/medals`;
+}
+
+async function fetchPage(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed request (${response.status}) for ${url}`);
+    }
+    return response.text();
 }
 
 async function getMedalData(type, year, limit) {
     var url = getURL(type, year);
+    var body;
 
-    var response = await fetch(url);
-
-    if (!response.ok) {
-        LOG.log("Error fetching data from ESPN");
+    try {
+        body = await fetchPage(url);
+    } catch (error) {
+        const alternateUrl = getAlternateURL(type, year);
+        LOG.warn(`Primary ESPN URL failed, trying alternate URL: ${alternateUrl}`);
+        body = await fetchPage(alternateUrl);
     }
 
-    var body = await response.text();
     const $ = cheerio.load(body);
     var medalContainer = $('.medal-container');
     var medalTable = medalContainer.next();
