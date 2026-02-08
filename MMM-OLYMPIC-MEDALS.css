@@ -1,17 +1,28 @@
-h5 {
+.MMM-OLYMPIC-MEDALS h5 {
     margin-top: 5px;
     margin-bottom: 5px;
 }
 
-.logo {
+.MMM-OLYMPIC-MEDALS .logo {
     margin-right: 5px;
+    height: 12px;
+    width: auto;
+    display: block;
 }
 
-th {
-    padding-left: 5px;
-    padding-right: 5px;
+.MMM-OLYMPIC-MEDALS header .logo {
+    height: 24px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-.align-middle {
+.MMM-OLYMPIC-MEDALS th,
+.MMM-OLYMPIC-MEDALS td {
+    padding: 1px 5px;
+    line-height: 1.1;
+    vertical-align: middle;
+}
+
+.MMM-OLYMPIC-MEDALS .align-middle {
     text-align: center;
 }
