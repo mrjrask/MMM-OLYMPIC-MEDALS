@@ -10,6 +10,13 @@
     display: block;
 }
 
+.MMM-OLYMPIC-MEDALS .table.small .logo,
+.MMM-OLYMPIC-MEDALS .table.medium .logo,
+.MMM-OLYMPIC-MEDALS .table.large .logo,
+.MMM-OLYMPIC-MEDALS .table.xlarge .logo {
+    height: 24px;
+}
+
 .MMM-OLYMPIC-MEDALS header .logo {
     height: 24px;
     display: inline-block;
