@@ -33,3 +33,7 @@
 .MMM-OLYMPIC-MEDALS .align-middle {
     text-align: center;
 }
+
+.MMM-OLYMPIC-MEDALS .medal-emoji {
+    font-family: "Noto Color Emoji", sans-serif;
+}
