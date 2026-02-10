@@ -1,6 +1,106 @@
 const cheerio = require('cheerio');
 const LOG = require('logger');
 
+const IOC_ABBREVIATIONS = {
+    'ain': 'AIN',
+    'argentina': 'ARG',
+    'armenia': 'ARM',
+    'australia': 'AUS',
+    'austria': 'AUT',
+    'azerbaijan': 'AZE',
+    'bahamas': 'BAH',
+    'bahrain': 'BRN',
+    'belgium': 'BEL',
+    'bermuda': 'BER',
+    'brazil': 'BRA',
+    'bulgaria': 'BUL',
+    'canada': 'CAN',
+    'cape verde': 'CPV',
+    'cabo verde': 'CPV',
+    'chile': 'CHI',
+    'chinese taipei': 'TPE',
+    'taiwan': 'TPE',
+    'colombia': 'COL',
+    'croatia': 'CRO',
+    'cuba': 'CUB',
+    'cyprus': 'CYP',
+    'czech republic': 'CZE',
+    'czechia': 'CZE',
+    'denmark': 'DEN',
+    'dominica': 'DMA',
+    'dominican republic': 'DOM',
+    'ecuador': 'ECU',
+    'egypt': 'EGY',
+    'ethiopia': 'ETH',
+    'fiji': 'FIJ',
+    'finland': 'FIN',
+    'france': 'FRA',
+    'georgia': 'GEO',
+    'germany': 'GER',
+    'great britain': 'GBR',
+    'united kingdom': 'GBR',
+    'greece': 'GRE',
+    'grenada': 'GRN',
+    'hungary': 'HUN',
+    'india': 'IND',
+    'indonesia': 'INA',
+    'iran': 'IRI',
+    'islamic republic of iran': 'IRI',
+    'ireland': 'IRL',
+    'israel': 'ISR',
+    'italy': 'ITA',
+    'jamaica': 'JAM',
+    'japan': 'JPN',
+    'jordan': 'JOR',
+    'kazakhstan': 'KAZ',
+    'kenya': 'KEN',
+    'kosovo': 'KOS',
+    'kyrgyzstan': 'KGZ',
+    'latvia': 'LAT',
+    'lithuania': 'LTU',
+    'malaysia': 'MAS',
+    'mexico': 'MEX',
+    'moldova': 'MDA',
+    'mongolia': 'MGL',
+    'morocco': 'MAR',
+    'netherlands': 'NED',
+    'new zealand': 'NZL',
+    'north korea': 'PRK',
+    'democratic peoples republic of korea': 'PRK',
+    'norway': 'NOR',
+    'pakistan': 'PAK',
+    'philippines': 'PHI',
+    'poland': 'POL',
+    'portugal': 'POR',
+    'qatar': 'QAT',
+    'refugee olympic team': 'EOR',
+    'romania': 'ROU',
+    'russia': 'RUS',
+    'san marino': 'SMR',
+    'serbia': 'SRB',
+    'singapore': 'SGP',
+    'slovakia': 'SVK',
+    'slovenia': 'SLO',
+    'south africa': 'RSA',
+    'south korea': 'KOR',
+    'republic of korea': 'KOR',
+    'spain': 'ESP',
+    'sweden': 'SWE',
+    'switzerland': 'SUI',
+    'tajikistan': 'TJK',
+    'thailand': 'THA',
+    'trinidad and tobago': 'TTO',
+    'tunisia': 'TUN',
+    'turkey': 'TUR',
+    'turkiye': 'TUR',
+    'uganda': 'UGA',
+    'ukraine': 'UKR',
+    'united states': 'USA',
+    'uruguay': 'URU',
+    'uzbekistan': 'UZB',
+    'venezuela': 'VEN'
+};
+
 function getURL(type, year) {
     if (type === 'winter') {
         return 'https://www.espn.com/olympics/winter/2026/medals';
@@ -57,11 +157,11 @@ function parseMedalData(body, limit) {
 
         const cells = $(row).find('th, td');
         const countryCell = getCell(cells, columns.country);
-        const abbreviation = getAbbreviation($, row, countryCell);
         const country =
             $(row).find('.country_name--long').first().text().trim() ||
             countryCell.find('.hide-mobile, .long-name').first().text().trim() ||
             countryCell.text().trim();
+        const abbreviation = getAbbreviation($, row, countryCell, country);
 
         if (!country) {
             return;
@@ -91,9 +191,14 @@ function parseMedalData(body, limit) {
     };
 }
 
-function getAbbreviation($, row, countryCell) {
+function getAbbreviation($, row, countryCell, country) {
     const rowElement = $(row);
     const cellText = normalizeCountryCellText(countryCell.text());
+    const mappedAbbreviation = mapCountryToIOC(country || cellText);
+
+    if (mappedAbbreviation) {
+        return mappedAbbreviation;
+    }
 
     const directAbbreviation =
         rowElement.find('.country_name--abbrev').first().text().trim() ||
@@ -109,6 +214,24 @@ function getAbbreviation($, row, countryCell) {
     }
 
     return cellText.slice(0, 3).toUpperCase();
+}
+
+function mapCountryToIOC(country) {
+    const normalizedCountry = normalizeCountryKey(country);
+    if (!normalizedCountry) {
+        return '';
+    }
+
+    return IOC_ABBREVIATIONS[normalizedCountry] || '';
+}
+
+function normalizeCountryKey(country) {
+    return country
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 

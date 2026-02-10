@@ -57,6 +57,29 @@ function run() {
     const directResult = parseMedalData(htmlWithDirectAbbrev, 5);
     assert.equal(directResult.rows[0].abbreviation, 'CAN');
 
+    const htmlWithoutAbbrevUsesIocCode = `
+        <table>
+            <caption>Medals</caption>
+            <thead>
+                <tr><th>Country</th><th>Gold</th><th>Silver</th><th>Bronze</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="country_name--long">Great Britain</span></td>
+                    <td>3</td><td>2</td><td>1</td><td>6</td>
+                </tr>
+                <tr>
+                    <td><span class="country_name--long">Chinese Taipei</span></td>
+                    <td>1</td><td>1</td><td>1</td><td>3</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    const mappedResult = parseMedalData(htmlWithoutAbbrevUsesIocCode, 5);
+    assert.equal(mappedResult.rows[0].abbreviation, 'GBR');
+    assert.equal(mappedResult.rows[1].abbreviation, 'TPE');
+
     console.log('parseMedalData abbreviation tests passed');
 }
 
