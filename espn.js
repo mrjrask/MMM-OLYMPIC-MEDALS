@@ -57,10 +57,7 @@ function parseMedalData(body, limit) {
 
         const cells = $(row).find('th, td');
         const countryCell = getCell(cells, columns.country);
-        const abbreviation =
-            $(row).find('.country_name--abbrev').first().text().trim() ||
-            countryCell.find('.short-name, .abbr').first().text().trim() ||
-            countryCell.text().trim().slice(0, 3).toUpperCase();
+        const abbreviation = getAbbreviation($, row, countryCell);
         const country =
             $(row).find('.country_name--long').first().text().trim() ||
             countryCell.find('.hide-mobile, .long-name').first().text().trim() ||
@@ -92,6 +89,43 @@ function parseMedalData(body, limit) {
         header,
         rows: countries
     };
+}
+
+function getAbbreviation($, row, countryCell) {
+    const rowElement = $(row);
+    const cellText = normalizeCountryCellText(countryCell.text());
+
+    const directAbbreviation =
+        rowElement.find('.country_name--abbrev').first().text().trim() ||
+        countryCell.find('.short-name, .abbr').first().text().trim();
+
+    if (directAbbreviation) {
+        return directAbbreviation.toUpperCase();
+    }
+
+    const embeddedToken = extractThreeLetterToken(cellText);
+    if (embeddedToken) {
+        return embeddedToken;
+    }
+
+    return cellText.slice(0, 3).toUpperCase();
+}
+
+
+function normalizeCountryCellText(text) {
+    return text
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractThreeLetterToken(text) {
+    const tokens = text.match(/\b[A-Za-z]{3}\b/g);
+    if (!tokens || !tokens.length) {
+        return '';
+    }
+
+    return tokens[tokens.length - 1].toUpperCase();
 }
 
 function findMedalTable($) {
