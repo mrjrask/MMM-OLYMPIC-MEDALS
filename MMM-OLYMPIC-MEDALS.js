@@ -98,14 +98,16 @@ Module.register('MMM-OLYMPIC-MEDALS', {
             return [];
         }
 
-        return [...this.rows].sort((a, b) => {
-            const goldDifference = this.toNumber(b.gold) - this.toNumber(a.gold);
-            if (goldDifference !== 0) {
-                return goldDifference;
-            }
+        return this.rows
+            .filter((row) => this.toNumber(row.gold) > 0)
+            .sort((a, b) => {
+                const goldDifference = this.toNumber(b.gold) - this.toNumber(a.gold);
+                if (goldDifference !== 0) {
+                    return goldDifference;
+                }
 
-            return this.toNumber(b.total) - this.toNumber(a.total);
-        });
+                return this.toNumber(b.total) - this.toNumber(a.total);
+            });
     },
 
     toNumber(value) {
