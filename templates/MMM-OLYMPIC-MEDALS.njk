@@ -10,20 +10,31 @@
     {% if noData %}
         <h5>{{"NO_MEDALS" | translate }}</h5>
     {% else %}
+    {% if activePage == 1 %}
     <h5>{{ "MEDALS_HEADER" | translate }}</h5>
+    {% else %}
+    <h5>{{ "MEDALS_HEADER" | translate }} ({{ "GOLD" | translate }})</h5>
+    {% endif %}
     <table class="statistics table {{config.tableSize}}">
         <thead>
             <tr>
                 <th>#</th>
                 <th colspan="2">{{"COUNTRY" | translate }}</th>
                 <th class="medal-emoji">🥇</th>
+                {% if activePage == 1 %}
                 <th class="medal-emoji">🥈</th>
                 <th class="medal-emoji">🥉</th>
+                {% endif %}
                 <th>{{ "TOTAL" | translate }}</th>
             </tr>
         </thead>
         <tbody>
-            {% for row in rows %}
+            {% if activePage == 1 %}
+                {% set tableRows = rows %}
+            {% else %}
+                {% set tableRows = sortedByGoldRows %}
+            {% endif %}
+            {% for row in tableRows %}
                 <tr class="centered-row">
                     <td>{{ loop.index }}</td>
                     <td><img src="{{ row.img }}" class="logo"/></td>
@@ -33,8 +44,10 @@
                         <td class="align-left">{{ row.country }}</td>
                     {% endif %}
                     <td class="align-middle">{{ row.gold }}</td>
+                    {% if activePage == 1 %}
                     <td class="align-middle">{{ row.silver }}</td>
                     <td class="align-middle">{{ row.bronze }}</td>
+                    {% endif %}
                     <td class="align-middle">{{ row.total }}</td>
                 </tr>
             {% else %}
