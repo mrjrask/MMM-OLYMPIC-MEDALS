@@ -93,6 +93,7 @@ Olympic Medals Module for MagicMirror<sup>2</sup>
 | `tableSize` | `'xsmall'` | Font size of table. Possible values: `'xsmall'`, `'small'`, `'medium'`, `'large'` and `'xlarge'` |
 | `numOfRows` | `10` | Max number of countries to show in table. |
 | `useAbbreviations` | `false` | Whether to use full country name or 3 character abbreviation. |
+| `pageFlipInterval` | `15000` (15 seconds) | How often the module flips between the full medal table (page 1) and the gold-sorted summary view without silver/bronze columns (page 2). |
 
 ## Module Notes
 

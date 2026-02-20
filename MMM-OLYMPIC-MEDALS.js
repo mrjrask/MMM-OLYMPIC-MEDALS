@@ -16,7 +16,8 @@ Module.register('MMM-OLYMPIC-MEDALS', {
         reloadInterval: 60 * 60 * 1000, // every hour
         tableSize: 'xsmall',
         numOfRows: 10,
-        useAbbreviations: false
+        useAbbreviations: false,
+        pageFlipInterval: 15 * 1000
     },
 
     getTranslations() {
@@ -34,12 +35,15 @@ Module.register('MMM-OLYMPIC-MEDALS', {
     },
 
     getTemplateData() {
+        const sortedByGoldRows = this.getRowsSortedByGold();
         return {
             loaded: this.loaded,
             rows: this.rows,
+            sortedByGoldRows,
             config: this.config,
             noData: this.noData,
             configError: this.configError,
+            activePage: this.activePage,
             fns: { translate: this.translate.bind(this) }
         };
     },
@@ -47,12 +51,19 @@ Module.register('MMM-OLYMPIC-MEDALS', {
     start() {
         Log.info(`Starting module: ${this.name}`);
         this.loaded = false;
+        this.rows = [];
+        this.activePage = 1;
         this.config.season = this.config.season.toLowerCase();
         this.getData();
         setInterval(() => {
             console.log("Refreshing Olympics data...");
             this.getData();
         }, this.config.reloadInterval);
+
+        setInterval(() => {
+            this.activePage = this.activePage === 1 ? 2 : 1;
+            this.updateDom();
+        }, this.config.pageFlipInterval);
     },
 
     suspend() { },
@@ -81,4 +92,24 @@ Module.register('MMM-OLYMPIC-MEDALS', {
             this.updateDom();
         }
     },
+
+    getRowsSortedByGold() {
+        if (!Array.isArray(this.rows)) {
+            return [];
+        }
+
+        return [...this.rows].sort((a, b) => {
+            const goldDifference = this.toNumber(b.gold) - this.toNumber(a.gold);
+            if (goldDifference !== 0) {
+                return goldDifference;
+            }
+
+            return this.toNumber(b.total) - this.toNumber(a.total);
+        });
+    },
+
+    toNumber(value) {
+        const parsed = parseInt(value, 10);
+        return Number.isNaN(parsed) ? 0 : parsed;
+    }
 });
